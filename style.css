@@ -26,6 +26,7 @@
   .filter-btn       { border-color: #3A3A5C; }
   #new-task         { border-color: #3A3A5C; }
   #new-cat          { border-color: #3A3A5C; }
+  #new-priority     { border-color: #3A3A5C; }
   #sort-select      { border-color: #3A3A5C; }
   .io-btn           { border-color: #3A3A5C; }
   .cat-업무         { background: #1A2D4A; color: #82B0E0; }
@@ -37,6 +38,9 @@
   #new-due          { border-color: #3A3A5C; }
   .due-clear-btn    { border-color: #3A3A5C; }
   mark              { background: rgba(91,141,217,0.3); }
+  .pri-높음 { background: #3D0A0A; color: #FCA5A5; }
+  .pri-중간 { background: #3D2A03; color: #FCD34D; }
+  .pri-낮음 { background: #1F2937; color: #9CA3AF; }
 }
 
 /* ── Reset ────────────────────────────────────────────────────── */
@@ -117,7 +121,8 @@ header h1   { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.5px; }
 #new-task.at-limit,
 #new-task.at-limit:focus         { border-color: var(--color-danger); }
 
-#new-cat {
+#new-cat,
+#new-priority {
   padding: 10px;
   border: 1.5px solid #dee2e6;
   border-radius: var(--radius-md);
@@ -129,7 +134,8 @@ header h1   { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.5px; }
   transition: border-color 0.18s;
 }
 
-#new-cat:focus { border-color: var(--color-primary); }
+#new-cat:focus,
+#new-priority:focus { border-color: var(--color-primary); }
 
 .date-row {
   display: flex;
@@ -378,6 +384,12 @@ mark { background: rgba(46,95,163,0.18); color: inherit; border-radius: 2px; pad
 .cat-개인 { background: #EEEDFE; color: #3C3489; }
 .cat-공부 { background: #EAF3DE; color: #27500A; }
 
+/* 우선순위 배지 */
+.priority-badge { font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 99px; flex-shrink: 0; white-space: nowrap; }
+.pri-높음 { background: #FEE2E2; color: #991B1B; }
+.pri-중간 { background: #FEF3C7; color: #92400E; }
+.pri-낮음 { background: #F3F4F6; color: #6B7280; }
+
 /* 수정/삭제 버튼 — hover 시에만 표시 */
 .item-actions {
   display: flex;
@@ -415,7 +427,7 @@ mark { background: rgba(46,95,163,0.18); color: inherit; border-radius: 2px; pad
   header      { flex-direction: column; align-items: flex-start; padding: 14px 1rem; gap: 2px; }
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
   .input-row  { flex-direction: column; }
-  #new-task, #new-cat, #add-btn { width: 100%; }
+  #new-task, #new-cat, #new-priority, #add-btn { width: 100%; }
   .toolbar    { flex-wrap: wrap; }
   .filter-row { flex-wrap: wrap; }
   .date-row   { flex-wrap: wrap; }

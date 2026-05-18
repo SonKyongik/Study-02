@@ -9,6 +9,9 @@ const FILTER_LABEL = {
   '업무': '💼 업무', '개인': '🏠 개인', '공부': '📚 공부',
 };
 
+const PRIORITY_LABEL = { '높음': '🔴 높음', '중간': '🟡 중간', '낮음': '🔵 낮음' };
+const PRIORITY_ORDER = { '높음': 0, '중간': 1, '낮음': 2 };
+
 const CAT_KEYWORDS = {
   '업무': ['회의','보고','기획','업무','출장','미팅','발표','계획','프로젝트','마감','메일','계약','제안','보고서'],
   '공부': ['공부','학습','강의','읽기','책','복습','과제','시험','연구','정리','노트','강좌','수업'],
@@ -145,6 +148,9 @@ function getSortedTodos(list) {
       if (!b.dueDate) return -1;
       return a.dueDate.localeCompare(b.dueDate);
     });
+    case 'priority': return arr.sort((a, b) =>
+      PRIORITY_ORDER[a.priority ?? '중간'] - PRIORITY_ORDER[b.priority ?? '중간']
+    );
     case 'manual':   return arr;
     default:         return arr.sort((a, b) => b.createdAt - a.createdAt);
   }
@@ -211,6 +217,7 @@ function renderTodos(list) {
       ${kw ? '<span class="keyword-tag">' + escapeHtml(kw) + '</span>' : ''}
       ${due ? '<span class="' + due.cls + '">📅 ' + due.label + '</span>' : ''}
       <span class="todo-time">${formatDateTime(t.createdAt)}</span>
+      <span class="priority-badge pri-${t.priority ?? '중간'}">${PRIORITY_LABEL[t.priority ?? '중간']}</span>
       <span class="todo-category cat-${t.category}">${CAT_LABEL[t.category]}</span>
       <div class="item-actions">
         <button class="edit-btn"   data-action="edit"   data-id="${t.id}" aria-label="수정">✏</button>
@@ -233,6 +240,7 @@ function addTodo() {
     id: generateId(),
     text,
     category: document.getElementById('new-cat').value,
+    priority: document.getElementById('new-priority').value,
     done: false,
     createdAt: Date.now(),
     dueDate: dueInput.value || null,
@@ -346,6 +354,7 @@ function importTodos(file) {
         id:        t.id        || generateId(),
         text:      String(t.text || '').slice(0, 80),
         category:  ['업무', '개인', '공부'].includes(t.category) ? t.category : '개인',
+        priority:  ['높음', '중간', '낮음'].includes(t.priority) ? t.priority : '중간',
         done:      Boolean(t.done),
         createdAt: Number(t.createdAt) || Date.now(),
         dueDate:   t.dueDate && /^\d{4}-\d{2}-\d{2}$/.test(t.dueDate) ? t.dueDate : null,
