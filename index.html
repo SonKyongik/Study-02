@@ -41,6 +41,8 @@
       .edit-btn:hover   { background: rgba(91,141,217,0.18); }
       .delete-btn:hover { background: rgba(232,114,74,0.18); }
       #search-input     { border-color: #3A3A5C; }
+      #new-due          { border-color: #3A3A5C; }
+      .due-clear-btn    { border-color: #3A3A5C; }
       mark              { background: rgba(91,141,217,0.3); }
     }
 
@@ -135,6 +137,43 @@
     }
 
     #new-cat:focus { border-color: var(--color-primary); }
+
+    .date-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .date-row label { font-size: 0.83rem; color: var(--color-muted); white-space: nowrap; flex-shrink: 0; }
+
+    #new-due {
+      padding: 6px 10px;
+      border: 1.5px solid #dee2e6;
+      border-radius: var(--radius-md);
+      font-size: 0.83rem;
+      color: var(--color-text);
+      background: var(--color-card);
+      outline: none;
+      cursor: pointer;
+      transition: border-color 0.18s;
+    }
+
+    #new-due:focus { border-color: var(--color-primary); }
+
+    .due-clear-btn {
+      padding: 6px 10px;
+      border: 1px solid #dee2e6;
+      border-radius: var(--radius-md);
+      background: transparent;
+      font-size: 0.83rem;
+      color: var(--color-muted);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: border-color 0.15s, color 0.15s;
+    }
+
+    .due-clear-btn:hover { border-color: var(--color-danger); color: var(--color-danger); }
 
     #add-btn {
       padding: 10px 22px;
@@ -328,6 +367,12 @@
     /* 생성 일시 */
     .todo-time { font-size: 11px; color: var(--color-muted); white-space: nowrap; flex-shrink: 0; }
 
+    /* 마감일 */
+    .todo-due         { font-size: 11px; white-space: nowrap; flex-shrink: 0; color: var(--color-muted); }
+    .todo-due.overdue { color: var(--color-danger); font-weight: 600; }
+    .todo-due.today   { color: #E6820A; font-weight: 600; }
+    .todo-due.soon    { color: var(--color-primary); }
+
     /* 키워드 태그 */
     .keyword-tag { font-size: 10px; color: var(--color-muted); background: var(--color-bg); border: 1px solid #dee2e6; border-radius: 99px; padding: 1px 7px; flex-shrink: 0; white-space: nowrap; }
 
@@ -380,6 +425,8 @@
       #new-task, #new-cat, #add-btn { width: 100%; }
       .toolbar    { flex-wrap: wrap; }
       .filter-row { flex-wrap: wrap; }
+      .date-row   { flex-wrap: wrap; }
+      #new-due    { flex: 1; min-width: 130px; }
     }
   </style>
 </head>
@@ -432,6 +479,11 @@
       </select>
       <button id="add-btn">추가</button>
     </div>
+    <div class="date-row">
+      <label for="new-due">📅 마감일</label>
+      <input type="date" id="new-due">
+      <button type="button" id="due-clear" class="due-clear-btn">없음</button>
+    </div>
     <p class="char-hint"><span id="char-count">0</span>/80</p>
   </section>
 
@@ -441,6 +493,7 @@
       <option value="date">생성일순</option>
       <option value="category">카테고리순</option>
       <option value="status">완료 상태순</option>
+      <option value="dueDate">마감일순</option>
       <option value="manual">수동 정렬</option>
     </select>
     <div class="io-btns">
@@ -529,6 +582,22 @@
     return str.replace(/[&<>"']/g, c => MAP[c]);
   }
 
+  function formatDueDate(dateStr) {
+    if (!dateStr) return null;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const due  = new Date(dateStr + 'T00:00:00');
+    const diff = Math.floor((due - today) / 86400000);
+    const mo   = String(due.getMonth() + 1).padStart(2, '0');
+    const da   = String(due.getDate()).padStart(2, '0');
+    let label = `${mo}/${da}`;
+    let cls   = 'todo-due';
+    if (diff < 0)        { cls += ' overdue'; label += ' 지남'; }
+    else if (diff === 0) { cls += ' today';   label += ' 오늘'; }
+    else if (diff === 1) { cls += ' soon';    label += ' 내일'; }
+    return { label, cls };
+  }
+
   function guessCategory(text) {
     const t = text.toLowerCase();
     for (const [cat, words] of Object.entries(CAT_KEYWORDS)) {
@@ -594,6 +663,12 @@
     switch (currentSort) {
       case 'category': return arr.sort((a, b) => a.category.localeCompare(b.category));
       case 'status':   return arr.sort((a, b) => Number(a.done) - Number(b.done));
+      case 'dueDate':  return arr.sort((a, b) => {
+        if (!a.dueDate && !b.dueDate) return 0;
+        if (!a.dueDate) return 1;
+        if (!b.dueDate) return -1;
+        return a.dueDate.localeCompare(b.dueDate);
+      });
       case 'manual':   return arr;
       default:         return arr.sort((a, b) => b.createdAt - a.createdAt);
     }
@@ -648,7 +723,8 @@
     }
 
     listEl.innerHTML = filtered.map(t => {
-      const kw = getMatchedKeyword(t.text);
+      const kw  = getMatchedKeyword(t.text);
+      const due = formatDueDate(t.dueDate);
       return `
       <div class="todo-item${t.done ? ' done' : ''}" data-id="${t.id}"${isManual ? ' draggable="true"' : ''}>
         ${isManual ? '<span class="drag-handle" aria-hidden="true">⠿</span>' : ''}
@@ -657,6 +733,7 @@
           aria-label="${t.done ? '미완료로 표시' : '완료로 표시'}">${t.done ? '✓' : ''}</button>
         <span class="todo-text">${highlightText(t.text, searchQuery)}</span>
         ${kw ? '<span class="keyword-tag">' + escapeHtml(kw) + '</span>' : ''}
+        ${due ? '<span class="' + due.cls + '">📅 ' + due.label + '</span>' : ''}
         <span class="todo-time">${formatDateTime(t.createdAt)}</span>
         <span class="todo-category cat-${t.category}">${CAT_LABEL[t.category]}</span>
         <div class="item-actions">
@@ -675,17 +752,20 @@
     const text  = input.value.trim();
     if (!text) { input.focus(); return; }
 
+    const dueInput = document.getElementById('new-due');
     todos.push({
       id: generateId(),
       text,
       category: document.getElementById('new-cat').value,
       done: false,
       createdAt: Date.now(),
+      dueDate: dueInput.value || null,
     });
     saveTodos(todos);
     renderTodos(todos);
 
-    input.value = '';
+    input.value    = '';
+    dueInput.value = '';
     input.classList.remove('at-limit');
     document.getElementById('char-count').textContent = '0';
     document.querySelector('.char-hint').classList.remove('at-limit');
@@ -797,6 +877,7 @@
           category:  ['업무', '개인', '공부'].includes(t.category) ? t.category : '개인',
           done:      Boolean(t.done),
           createdAt: Number(t.createdAt) || Date.now(),
+          dueDate:   t.dueDate && /^\d{4}-\d{2}-\d{2}$/.test(t.dueDate) ? t.dueDate : null,
         }));
         saveTodos(todos);
         renderTodos(todos);
@@ -813,6 +894,10 @@
   document.getElementById('add-btn').addEventListener('click', addTodo);
   document.getElementById('new-task').addEventListener('keydown', e => {
     if (e.key === 'Enter') addTodo();
+  });
+
+  document.getElementById('due-clear').addEventListener('click', () => {
+    document.getElementById('new-due').value = '';
   });
 
   // 글자 수 + 유효성 표시 + 자동 카테고리 추론
