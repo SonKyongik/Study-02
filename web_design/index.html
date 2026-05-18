@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>할 일 관리</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ── Header ──────────────────────────────────────────────────────── -->
+<header>
+  <h1>할 일 관리</h1>
+  <p id="today-date"></p>
+</header>
+
+<div class="layout">
+
+  <!-- ── Sidebar ─────────────────────────────────────────────────────── -->
+  <aside class="sidebar">
+
+    <div class="sidebar-stats">
+      <div class="progress-wrap">
+        <div class="progress-track">
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-value" id="stat-total">0</div>
+          <div class="stat-label">전체</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value success" id="stat-done">0</div>
+          <div class="stat-label">완료</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value danger" id="stat-remaining">0</div>
+          <div class="stat-label">미완료</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="stat-rate">0%</div>
+          <div class="stat-label">진행률</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <p class="sidebar-label">필터</p>
+      <section id="filter-area" aria-label="필터">
+        <button class="filter-btn active" data-filter="all">전체 <span class="filter-count" id="fc-all">0</span></button>
+        <button class="filter-btn" data-filter="todo">미완료 <span class="filter-count" id="fc-todo">0</span></button>
+        <button class="filter-btn" data-filter="done">완료 <span class="filter-count" id="fc-done">0</span></button>
+        <div class="sidebar-divider"></div>
+        <button class="filter-btn" data-filter="업무">💼 업무 <span class="filter-count" id="fc-업무">0</span></button>
+        <button class="filter-btn" data-filter="개인">🏠 개인 <span class="filter-count" id="fc-개인">0</span></button>
+        <button class="filter-btn" data-filter="공부">📚 공부 <span class="filter-count" id="fc-공부">0</span></button>
+      </section>
+    </div>
+
+    <button id="clear-done" hidden>완료 항목 삭제 (0개)</button>
+
+  </aside>
+
+  <!-- ── Main Content ─────────────────────────────────────────────────── -->
+  <div class="content">
+
+    <!-- Input area -->
+    <section id="input-area">
+      <div class="input-row">
+        <input type="text" id="new-task" placeholder="새 할 일 입력..."
+          maxlength="80" autocomplete="off">
+        <select id="new-cat">
+          <option value="업무">💼 업무</option>
+          <option value="개인">🏠 개인</option>
+          <option value="공부">📚 공부</option>
+        </select>
+        <select id="new-priority">
+          <option value="높음">🔴 높음</option>
+          <option value="중간" selected>🟡 중간</option>
+          <option value="낮음">🔵 낮음</option>
+        </select>
+        <button id="add-btn">추가</button>
+      </div>
+      <div class="date-row">
+        <label for="new-due">📅 마감일</label>
+        <input type="date" id="new-due">
+        <button type="button" id="due-clear" class="due-clear-btn">없음</button>
+      </div>
+      <p class="char-hint"><span id="char-count">0</span>/80</p>
+    </section>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <select id="sort-select" aria-label="정렬 기준">
+        <option value="date">생성일순</option>
+        <option value="category">카테고리순</option>
+        <option value="status">완료 상태순</option>
+        <option value="dueDate">마감일순</option>
+        <option value="priority">우선순위순</option>
+        <option value="manual">수동 정렬</option>
+      </select>
+      <div class="io-btns">
+        <button id="export-btn" class="io-btn">⬇ 내보내기</button>
+        <button id="import-btn" class="io-btn">⬆ 가져오기</button>
+      </div>
+    </div>
+    <input type="file" id="import-input" accept=".json" style="display:none" aria-hidden="true">
+
+    <!-- Search -->
+    <div class="search-row">
+      <input type="search" id="search-input" placeholder="🔍 할 일 검색..." autocomplete="off">
+    </div>
+
+    <!-- Todo list -->
+    <main id="todo-list" aria-label="할 일 목록"></main>
+
+  </div>
+
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
