@@ -21,11 +21,17 @@ cmd.exe /c start "" "C:\Users\SuperUser\Desktop\VibeCoding\Study-02\index.html"
 ## 파일 구조
 
 ```
-index.html   — HTML 구조 (98줄)
-style.css    — CSS 전체 (275줄)
-script.js    — JavaScript 전체 (298줄)
-CLAUDE.md    — 이 파일
+index.html          — HTML 구조 (모바일 기준)
+style.css           — CSS (모바일 기준)
+script.js           — JavaScript (공통 로직)
+web_design/
+  index.html        — HTML 구조 (데스크톱 2단 레이아웃)
+  style.css         — CSS (데스크톱 최적화)
+  script.js         — JavaScript (루트와 동일한 로직)
+CLAUDE.md           — 이 파일
 ```
+
+두 버전은 동일한 `localStorage` 키(`'todos'`)를 공유하므로 데이터가 연동된다.
 
 ## 데이터 모델
 
@@ -118,6 +124,31 @@ CLAUDE.md    — 이 파일
 - `toggleMemo(itemEl)` 이 DOM 직접 조작 (`.todo-memo.hidden` 토글)
 - 저장: `focusout` 위임 리스너 → `todos` 직접 변경 + `saveTodos` (재렌더링 없음)
 - 기존 데이터에 `memo` 필드가 없으면 `null`로 fallback
+
+## 데스크톱 레이아웃 (web_design/)
+
+`body`를 `flex-direction: column`으로 고정하고, `.layout`을 2단으로 나눈다.
+
+```
+header (height: 56px, 고정)
+└─ .layout (flex: 1, overflow: hidden)
+   ├─ .sidebar (width: 260px, overflow-y: auto)
+   │   ├─ .sidebar-stats   — 진행률 바 + 2×2 통계 카드
+   │   ├─ .sidebar-section — 세로형 필터 버튼 (#filter-area)
+   │   └─ #clear-done      — 사이드바 하단 고정
+   └─ .content (flex: 1, overflow-y: auto)
+       ├─ #input-area
+       ├─ .toolbar
+       ├─ .search-row
+       └─ #todo-list
+```
+
+| 항목 | 루트 버전 | web_design 버전 |
+|---|---|---|
+| 레이아웃 | 단일 컬럼, max-width 680px | 사이드바 + 메인 2단 |
+| 필터 버튼 | 가로 pill 나열 | 세로 전체폭 메뉴 |
+| 배경 | 단색 | 사이드바 흰색 / 메인 연회색 분리 |
+| 스크롤 | 페이지 전체 | 메인 영역만 스크롤 |
 
 ## 접근성
 
