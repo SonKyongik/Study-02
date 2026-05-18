@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 프로젝트 개요
 
-순수 Vanilla JavaScript(ES6+)로 만든 개인용 할 일 관리 앱. 빌드 도구 없이 `index.html` 단일 파일로 완결된다. 외부 라이브러리 없음.
+순수 Vanilla JavaScript(ES6+)로 만든 개인용 할 일 관리 앱. 빌드 도구 없음. 외부 라이브러리 없음.
 
 ## 실행 방법
 
@@ -21,7 +21,9 @@ cmd.exe /c start "" "C:\Users\SuperUser\Desktop\VibeCoding\Study-02\index.html"
 ## 파일 구조
 
 ```
-index.html   — 전체 앱 (CSS + HTML + JS, 824줄)
+index.html   — HTML 구조 (98줄)
+style.css    — CSS 전체 (275줄)
+script.js    — JavaScript 전체 (298줄)
 CLAUDE.md    — 이 파일
 ```
 
@@ -53,12 +55,12 @@ CLAUDE.md    — 이 파일
 | `--color-bg`      | `#F8F9FA` | `#1A1A2E` |
 | `--color-card`    | `#FFFFFF` | `#16213E` |
 
-## JS 구조 (섹션 순서)
+## JS 구조 (섹션 순서, script.js)
 
 ```
 // ── 상수 및 설정 ──    STORAGE_KEY, SORT_KEY, CAT_LABEL, FILTER_LABEL
 // ── 데이터 처리 ──     loadTodos, saveTodos, generateId, formatDate, escapeHtml
-// ── 상태 ──            todos, currentFilter, currentSort, dragSrcId
+// ── 상태 ──            todos, currentFilter, currentSort, dragSrcId, setTodos
 // ── 렌더링 ──          getFilteredTodos, getSortedTodos, updateFilterCounts,
 //                       updateStats, renderTodos
 // ── CRUD ──            addTodo, startEdit, toggleTodo, deleteTodo, clearDone
@@ -70,9 +72,8 @@ CLAUDE.md    — 이 파일
 ## 주요 설계 원칙
 
 **렌더링 흐름** — 모든 변경은 반드시 이 순서를 따른다:
-1. `todos` 배열 업데이트
-2. `saveTodos(todos)`
-3. `renderTodos(todos)`
+1. `setTodos(newList)` 호출 — 내부에서 `todos` 업데이트 + `saveTodos` 자동 실행
+2. `renderTodos(todos)`
 
 **이벤트 위임** — `#todo-list`에 단일 `click` 리스너를 달고 `e.target.closest('[data-action]')`으로 분기. 동적 생성 요소에도 작동한다.
 
