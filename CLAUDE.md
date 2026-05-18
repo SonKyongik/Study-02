@@ -38,6 +38,7 @@ CLAUDE.md    — 이 파일
   category:  '업무' | '개인' | '공부',
   priority:  '높음' | '중간' | '낮음', // 기본값 '중간', 없으면 '중간'으로 fallback
   done:      boolean,
+  memo:      string | null,       // 메모 텍스트, 없으면 null
   createdAt: number,              // Unix ms
   dueDate:   string | null,       // 'YYYY-MM-DD' 형식
 }
@@ -65,7 +66,7 @@ CLAUDE.md    — 이 파일
 // ── 상태 ──            todos, currentFilter, currentSort, dragSrcId, setTodos
 // ── 렌더링 ──          getFilteredTodos, getSortedTodos, updateFilterCounts,
 //                       updateStats, renderTodos
-// ── CRUD ──            addTodo, startEdit, toggleTodo, deleteTodo, clearDone
+// ── CRUD ──            addTodo, startEdit, toggleTodo, toggleMemo, deleteTodo, clearDone
 // ── 내보내기/가져오기 ── exportTodos, importTodos
 // ── 이벤트 핸들러 ──   (모두 아래쪽에 모아서 등록)
 // ── 초기화 ──          formatDate(), sort-select.value, renderTodos(todos)
@@ -82,6 +83,8 @@ CLAUDE.md    — 이 파일
 **인라인 수정** — `startEdit(id, spanEl)` 은 `contentEditable='true'`로 전환 후 Enter/blur에서 저장, Escape에서 복원. `committed` 플래그로 Enter+blur 이중 저장을 방지한다.
 
 **드래그 앤 드롭** — `currentSort === 'manual'`일 때만 `draggable="true"` 카드에 활성화. `dragstart/dragover/drop/dragend`를 `#todo-list`에 위임.
+
+**메모 자동 저장** — 메모 textarea는 `focusout` 이벤트로 자동 저장. 재렌더링 없이 `todos` 배열과 `saveTodos`만 호출해 입력 흐름을 유지한다. 이 패턴은 일반 렌더링 흐름(`setTodos → renderTodos`)의 예외다.
 
 ## 필터 키 값
 
@@ -108,8 +111,16 @@ CLAUDE.md    — 이 파일
 - 기존 데이터에 `priority` 필드가 없으면 렌더링/정렬 시 `'중간'`으로 fallback
 - `getSortedTodos`의 `'priority'` case에서 `PRIORITY_ORDER`로 정렬
 
+## 메모/노트
+
+- 카드 우상단 `📝` 버튼(`data-action="memo"`) 클릭 → `.todo-memo` 영역 펼침/접힘
+- 메모가 있는 항목은 버튼에 `.has-memo` 클래스 추가 → 파란색 표시
+- `toggleMemo(itemEl)` 이 DOM 직접 조작 (`.todo-memo.hidden` 토글)
+- 저장: `focusout` 위임 리스너 → `todos` 직접 변경 + `saveTodos` (재렌더링 없음)
+- 기존 데이터에 `memo` 필드가 없으면 `null`로 fallback
+
 ## 접근성
 
 - `:focus-visible` 전역 스타일 (outline 2px solid var(--color-primary))
-- 체크/수정/삭제 버튼에 `aria-label` 필수
+- 체크/수정/삭제/메모 버튼에 `aria-label` 필수
 - 수정 중 Escape → 편집 취소
