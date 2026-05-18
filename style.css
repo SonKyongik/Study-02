@@ -34,6 +34,9 @@
   .cat-공부         { background: #1A2D1A; color: #7AB87A; }
   .edit-btn:hover   { background: rgba(91,141,217,0.18); }
   .delete-btn:hover { background: rgba(232,114,74,0.18); }
+  .memo-btn:hover   { background: rgba(91,141,217,0.18); }
+  .memo-textarea    { border-color: #3A3A5C; background: #1A1A2E; }
+  .todo-memo        { border-top-color: rgba(255,255,255,0.08); }
   #search-input     { border-color: #3A3A5C; }
   #new-due          { border-color: #3A3A5C; }
   .due-clear-btn    { border-color: #3A3A5C; }
@@ -302,11 +305,16 @@ header h1   { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.5px; }
   border-radius: var(--radius-md);
   padding: 12px 14px;
   display: flex;
-  align-items: center;
-  gap: 12px;
+  flex-direction: column;
   box-shadow: 0 1px 3px rgba(0,0,0,0.07);
   animation: slideIn 0.2s ease;
   transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.todo-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .todo-item:hover    { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
@@ -401,7 +409,7 @@ mark { background: rgba(46,95,163,0.18); color: inherit; border-radius: 2px; pad
 
 .todo-item:hover .item-actions { opacity: 1; }
 
-.edit-btn, .delete-btn {
+.edit-btn, .delete-btn, .memo-btn {
   background: none;
   border: none;
   cursor: pointer;
@@ -412,8 +420,36 @@ mark { background: rgba(46,95,163,0.18); color: inherit; border-radius: 2px; pad
   transition: background 0.15s, color 0.15s;
 }
 
-.edit-btn:hover   { background: #EBF0FB; color: var(--color-primary); }
-.delete-btn:hover { background: #FDF0EA; color: var(--color-danger); }
+.edit-btn:hover      { background: #EBF0FB; color: var(--color-primary); }
+.delete-btn:hover    { background: #FDF0EA; color: var(--color-danger); }
+.memo-btn:hover      { background: #EBF0FB; color: var(--color-primary); }
+.memo-btn.has-memo   { color: var(--color-primary); }
+
+/* ── 메모 영역 ────────────────────────────────────────────────── */
+.todo-memo {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(0,0,0,0.06);
+}
+
+.memo-textarea {
+  width: 100%;
+  min-height: 60px;
+  padding: 8px 10px;
+  border: 1.5px solid #dee2e6;
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  color: var(--color-text);
+  background: var(--color-bg);
+  outline: none;
+  resize: vertical;
+  transition: border-color 0.18s;
+  font-family: inherit;
+  line-height: 1.4;
+}
+
+.memo-textarea:focus       { border-color: var(--color-primary); }
+.memo-textarea::placeholder { color: #adb5bd; }
 
 /* ── Animations ──────────────────────────────────────────────── */
 @keyframes slideIn {

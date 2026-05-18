@@ -209,19 +209,25 @@ function renderTodos(list) {
     const due = formatDueDate(t.dueDate);
     return `
     <div class="todo-item${t.done ? ' done' : ''}" data-id="${t.id}"${isManual ? ' draggable="true"' : ''}>
-      ${isManual ? '<span class="drag-handle" aria-hidden="true">⠿</span>' : ''}
-      <button class="check-btn${t.done ? ' checked' : ''}"
-        data-action="toggle" data-id="${t.id}"
-        aria-label="${t.done ? '미완료로 표시' : '완료로 표시'}">${t.done ? '✓' : ''}</button>
-      <span class="todo-text">${highlightText(t.text, searchQuery)}</span>
-      ${kw ? '<span class="keyword-tag">' + escapeHtml(kw) + '</span>' : ''}
-      ${due ? '<span class="' + due.cls + '">📅 ' + due.label + '</span>' : ''}
-      <span class="todo-time">${formatDateTime(t.createdAt)}</span>
-      <span class="priority-badge pri-${t.priority ?? '중간'}">${PRIORITY_LABEL[t.priority ?? '중간']}</span>
-      <span class="todo-category cat-${t.category}">${CAT_LABEL[t.category]}</span>
-      <div class="item-actions">
-        <button class="edit-btn"   data-action="edit"   data-id="${t.id}" aria-label="수정">✏</button>
-        <button class="delete-btn" data-action="delete" data-id="${t.id}" aria-label="삭제">✕</button>
+      <div class="todo-main">
+        ${isManual ? '<span class="drag-handle" aria-hidden="true">⠿</span>' : ''}
+        <button class="check-btn${t.done ? ' checked' : ''}"
+          data-action="toggle" data-id="${t.id}"
+          aria-label="${t.done ? '미완료로 표시' : '완료로 표시'}">${t.done ? '✓' : ''}</button>
+        <span class="todo-text">${highlightText(t.text, searchQuery)}</span>
+        ${kw ? '<span class="keyword-tag">' + escapeHtml(kw) + '</span>' : ''}
+        ${due ? '<span class="' + due.cls + '">📅 ' + due.label + '</span>' : ''}
+        <span class="todo-time">${formatDateTime(t.createdAt)}</span>
+        <span class="priority-badge pri-${t.priority ?? '중간'}">${PRIORITY_LABEL[t.priority ?? '중간']}</span>
+        <span class="todo-category cat-${t.category}">${CAT_LABEL[t.category]}</span>
+        <div class="item-actions">
+          <button class="memo-btn${t.memo ? ' has-memo' : ''}" data-action="memo" data-id="${t.id}" aria-label="메모">📝</button>
+          <button class="edit-btn"   data-action="edit"   data-id="${t.id}" aria-label="수정">✏</button>
+          <button class="delete-btn" data-action="delete" data-id="${t.id}" aria-label="삭제">✕</button>
+        </div>
+      </div>
+      <div class="todo-memo"${t.memo ? '' : ' hidden'}>
+        <textarea class="memo-textarea" data-id="${t.id}" placeholder="메모를 입력하세요...">${escapeHtml(t.memo || '')}</textarea>
       </div>
     </div>
   `;
@@ -242,6 +248,7 @@ function addTodo() {
     category: document.getElementById('new-cat').value,
     priority: document.getElementById('new-priority').value,
     done: false,
+    memo: null,
     createdAt: Date.now(),
     dueDate: dueInput.value || null,
   }]);
@@ -300,6 +307,16 @@ function startEdit(id, spanEl) {
   spanEl.addEventListener('blur', commit, { once: true });
 }
 
+function toggleMemo(itemEl) {
+  const memoEl = itemEl.querySelector('.todo-memo');
+  if (memoEl.hidden) {
+    memoEl.hidden = false;
+    memoEl.querySelector('.memo-textarea').focus();
+  } else {
+    memoEl.hidden = true;
+  }
+}
+
 function toggleTodo(id) {
   setTodos(todos.map(t => t.id === id ? { ...t, done: !t.done } : t));
   renderTodos(todos);
@@ -356,6 +373,7 @@ function importTodos(file) {
         category:  ['업무', '개인', '공부'].includes(t.category) ? t.category : '개인',
         priority:  ['높음', '중간', '낮음'].includes(t.priority) ? t.priority : '중간',
         done:      Boolean(t.done),
+        memo:      typeof t.memo === 'string' ? t.memo : null,
         createdAt: Number(t.createdAt) || Date.now(),
         dueDate:   t.dueDate && /^\d{4}-\d{2}-\d{2}$/.test(t.dueDate) ? t.dueDate : null,
       })));
@@ -439,6 +457,18 @@ listEl.addEventListener('click', e => {
   if (action === 'toggle')      toggleTodo(id);
   else if (action === 'edit')   startEdit(id, btn.closest('.todo-item').querySelector('.todo-text'));
   else if (action === 'delete') deleteTodo(id);
+  else if (action === 'memo')   toggleMemo(btn.closest('.todo-item'));
+});
+
+listEl.addEventListener('focusout', e => {
+  const textarea = e.target.closest('.memo-textarea');
+  if (!textarea) return;
+  const id = textarea.dataset.id;
+  const newMemo = textarea.value.trim() || null;
+  const todo = todos.find(t => t.id === id);
+  if (!todo || todo.memo === newMemo) return;
+  todos = todos.map(t => t.id === id ? { ...t, memo: newMemo } : t);
+  saveTodos(todos);
 });
 
 listEl.addEventListener('dragstart', e => {
