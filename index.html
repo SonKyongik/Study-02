@@ -40,6 +40,8 @@
       .cat-공부         { background: #1A2D1A; color: #7AB87A; }
       .edit-btn:hover   { background: rgba(91,141,217,0.18); }
       .delete-btn:hover { background: rgba(232,114,74,0.18); }
+      #search-input     { border-color: #3A3A5C; }
+      mark              { background: rgba(91,141,217,0.3); }
     }
 
     /* ── Reset ────────────────────────────────────────────────────── */
@@ -188,6 +190,24 @@
 
     .io-btn:hover { border-color: var(--color-primary); color: var(--color-primary); }
 
+    /* ── Search row ─────────────────────────────────────────────────── */
+    .search-row { margin-bottom: 12px; }
+
+    #search-input {
+      width: 100%;
+      padding: 8px 14px;
+      border: 1.5px solid #dee2e6;
+      border-radius: var(--radius-md);
+      font-size: 0.9rem;
+      color: var(--color-text);
+      background: var(--color-card);
+      outline: none;
+      transition: border-color 0.18s;
+    }
+
+    #search-input:focus        { border-color: var(--color-primary); }
+    #search-input::placeholder { color: #adb5bd; }
+
     /* ── Filter row ──────────────────────────────────────────────── */
     .filter-row {
       display: flex;
@@ -308,6 +328,12 @@
     /* 생성 일시 */
     .todo-time { font-size: 11px; color: var(--color-muted); white-space: nowrap; flex-shrink: 0; }
 
+    /* 키워드 태그 */
+    .keyword-tag { font-size: 10px; color: var(--color-muted); background: var(--color-bg); border: 1px solid #dee2e6; border-radius: 99px; padding: 1px 7px; flex-shrink: 0; white-space: nowrap; }
+
+    /* 검색 하이라이트 */
+    mark { background: rgba(46,95,163,0.18); color: inherit; border-radius: 2px; padding: 0 1px; }
+
     /* 카테고리 배지 */
     .todo-category { font-size: 12px; font-weight: 500; padding: 2px 10px; border-radius: 99px; flex-shrink: 0; white-space: nowrap; }
     .cat-업무 { background: #E6F1FB; color: #0C447C; }
@@ -424,6 +450,11 @@
   </div>
   <input type="file" id="import-input" accept=".json" style="display:none" aria-hidden="true">
 
+  <!-- ── Search row ─────────────────────────────────────────────────────── -->
+  <div class="search-row">
+    <input type="search" id="search-input" placeholder="🔍 할 일 검색..." autocomplete="off">
+  </div>
+
   <!-- ── Filter row ──────────────────────────────────────────────────── -->
   <div class="filter-row">
     <section id="filter-area" aria-label="필터">
@@ -506,11 +537,44 @@
     return null;
   }
 
+  function getMatchedKeyword(text) {
+    const t = text.toLowerCase();
+    for (const words of Object.values(CAT_KEYWORDS)) {
+      for (const w of words) {
+        if (t.includes(w)) return w;
+      }
+    }
+    return null;
+  }
+
+  function getSearchedTodos(list, query) {
+    if (!query) return list;
+    const q = query.toLowerCase();
+    return list.filter(t => t.text.toLowerCase().includes(q));
+  }
+
+  function highlightText(text, query) {
+    if (!query) return escapeHtml(text);
+    const lower = text.toLowerCase();
+    const q     = query.toLowerCase();
+    const parts = [];
+    let i = 0;
+    while (i < text.length) {
+      const idx = lower.indexOf(q, i);
+      if (idx === -1) { parts.push(escapeHtml(text.slice(i))); break; }
+      parts.push(escapeHtml(text.slice(i, idx)));
+      parts.push('<mark>' + escapeHtml(text.slice(idx, idx + q.length)) + '</mark>');
+      i = idx + q.length;
+    }
+    return parts.join('');
+  }
+
   // ── 상태 ─────────────────────────────────────────────────────────────
 
   let todos         = loadTodos();
   let currentFilter = 'all';
   let currentSort   = localStorage.getItem(SORT_KEY) || 'date';
+  let searchQuery   = '';
   let dragSrcId     = null;
 
   // ── 렌더링 ───────────────────────────────────────────────────────────
@@ -572,22 +636,27 @@
     updateStats(list);
 
     const listEl   = document.getElementById('todo-list');
-    const filtered = getSortedTodos(getFilteredTodos(list, currentFilter));
+    const filtered = getSortedTodos(getSearchedTodos(getFilteredTodos(list, currentFilter), searchQuery));
     const isManual = currentSort === 'manual';
 
     if (filtered.length === 0) {
-      const label = FILTER_LABEL[currentFilter] || currentFilter;
+      const label = searchQuery
+        ? `'${escapeHtml(searchQuery)}' 검색`
+        : FILTER_LABEL[currentFilter] || currentFilter;
       listEl.innerHTML = `<p class="empty-state">'${label}'에 해당하는 할 일이 없어요</p>`;
       return;
     }
 
-    listEl.innerHTML = filtered.map(t => `
+    listEl.innerHTML = filtered.map(t => {
+      const kw = getMatchedKeyword(t.text);
+      return `
       <div class="todo-item${t.done ? ' done' : ''}" data-id="${t.id}"${isManual ? ' draggable="true"' : ''}>
         ${isManual ? '<span class="drag-handle" aria-hidden="true">⠿</span>' : ''}
         <button class="check-btn${t.done ? ' checked' : ''}"
           data-action="toggle" data-id="${t.id}"
           aria-label="${t.done ? '미완료로 표시' : '완료로 표시'}">${t.done ? '✓' : ''}</button>
-        <span class="todo-text">${escapeHtml(t.text)}</span>
+        <span class="todo-text">${highlightText(t.text, searchQuery)}</span>
+        ${kw ? '<span class="keyword-tag">' + escapeHtml(kw) + '</span>' : ''}
         <span class="todo-time">${formatDateTime(t.createdAt)}</span>
         <span class="todo-category cat-${t.category}">${CAT_LABEL[t.category]}</span>
         <div class="item-actions">
@@ -595,7 +664,8 @@
           <button class="delete-btn" data-action="delete" data-id="${t.id}" aria-label="삭제">✕</button>
         </div>
       </div>
-    `).join('');
+    `;
+    }).join('');
   }
 
   // ── CRUD ─────────────────────────────────────────────────────────────
@@ -754,6 +824,12 @@
 
     const guessed = guessCategory(e.target.value);
     if (guessed) document.getElementById('new-cat').value = guessed;
+  });
+
+  // 검색
+  document.getElementById('search-input').addEventListener('input', e => {
+    searchQuery = e.target.value.trim();
+    renderTodos(todos);
   });
 
   // 필터
