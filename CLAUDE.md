@@ -33,11 +33,13 @@ CLAUDE.md    — 이 파일
 
 ```js
 {
-  id:        string,   // Date.now().toString(36) + random
-  text:      string,   // 최대 80자
+  id:        string,              // Date.now().toString(36) + random
+  text:      string,              // 최대 80자
   category:  '업무' | '개인' | '공부',
+  priority:  '높음' | '중간' | '낮음', // 기본값 '중간', 없으면 '중간'으로 fallback
   done:      boolean,
-  createdAt: number,   // Unix ms
+  createdAt: number,              // Unix ms
+  dueDate:   string | null,       // 'YYYY-MM-DD' 형식
 }
 ```
 
@@ -58,7 +60,7 @@ CLAUDE.md    — 이 파일
 ## JS 구조 (섹션 순서, script.js)
 
 ```
-// ── 상수 및 설정 ──    STORAGE_KEY, SORT_KEY, CAT_LABEL, FILTER_LABEL
+// ── 상수 및 설정 ──    STORAGE_KEY, SORT_KEY, CAT_LABEL, FILTER_LABEL, PRIORITY_LABEL, PRIORITY_ORDER
 // ── 데이터 처리 ──     loadTodos, saveTodos, generateId, formatDate, escapeHtml
 // ── 상태 ──            todos, currentFilter, currentSort, dragSrcId, setTodos
 // ── 렌더링 ──          getFilteredTodos, getSortedTodos, updateFilterCounts,
@@ -91,6 +93,20 @@ CLAUDE.md    — 이 파일
 | 카테고리 | `'업무'` / `'개인'` / `'공부'` |
 
 `getFilteredTodos(list, filter)` 의 `case` 와 일치해야 한다.
+
+## 우선순위
+
+`PRIORITY_LABEL` / `PRIORITY_ORDER` 상수로 관리.
+
+| 값 | 표시 | 정렬 순서 | 라이트 배지 | 다크 배지 |
+|---|---|---|---|---|
+| `'높음'` | 🔴 높음 | 0 | 연빨강 | 어두운 빨강 |
+| `'중간'` | 🟡 중간 | 1 | 연노랑 | 어두운 노랑 |
+| `'낮음'` | 🔵 낮음 | 2 | 연회색 | 어두운 회색 |
+
+- 입력 시 `#new-priority` select로 선택 (기본값: `'중간'`)
+- 기존 데이터에 `priority` 필드가 없으면 렌더링/정렬 시 `'중간'`으로 fallback
+- `getSortedTodos`의 `'priority'` case에서 `PRIORITY_ORDER`로 정렬
 
 ## 접근성
 
